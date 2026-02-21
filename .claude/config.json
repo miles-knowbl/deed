@@ -1,0 +1,26 @@
+{
+  "project": "deed",
+  "version": "0.1.0",
+  "mode": "greenfield",
+  "stack": {
+    "framework": "nextjs",
+    "language": "typescript",
+    "styling": "tailwind",
+    "animation": "framer-motion",
+    "ui": "radix-ui",
+    "state": "zustand",
+    "ai": "anthropic",
+    "signing": "pandadoc",
+    "email": "resend",
+    "deployment": "vercel"
+  },
+  "capabilities": [
+    "contract-form",
+    "contract-generation",
+    "contract-review",
+    "signing-chain",
+    "email-system",
+    "cicd-pipeline"
+  ],
+  "autonomy": "supervised"
+}
