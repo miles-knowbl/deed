@@ -302,7 +302,7 @@ export default function ContractForm() {
                 <p className="text-[11px] font-semibold text-neutral-400 uppercase tracking-widest">Contract Addendums</p>
                 <div className="flex-1 h-px bg-neutral-100" />
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 overflow-hidden">
                 {ADDENDUM_LIST.map(({ key, label }) => (
                   <motion.label
                     key={key}
