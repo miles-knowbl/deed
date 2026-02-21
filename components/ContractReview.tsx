@@ -177,7 +177,8 @@ export default function ContractReview() {
             <span className="text-xs text-neutral-400">{contractText.length.toLocaleString()} characters</span>
           </div>
 
-          <div className="h-[calc(100dvh-360px)] md:h-[calc(100dvh-440px)] min-h-[280px] overflow-y-auto px-4 sm:px-8 py-6">
+          <div className="h-[calc(100dvh-360px)] md:h-[calc(100dvh-440px)] min-h-[280px] overflow-y-auto overflow-x-hidden px-4 sm:px-8 py-6">
+            <div className="break-words overflow-hidden">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               components={{
@@ -193,6 +194,7 @@ export default function ContractReview() {
             >
               {contractText}
             </ReactMarkdown>
+            </div>
           </div>
         </motion.div>
 

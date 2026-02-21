@@ -181,7 +181,7 @@ export default function GeneratingView() {
               <div className="w-2.5 h-2.5 rounded-full bg-neutral-200" />
               <div className="w-2.5 h-2.5 rounded-full bg-neutral-200" />
               <div className="w-2.5 h-2.5 rounded-full bg-neutral-200" />
-              <span className="ml-3 text-xs text-neutral-400 font-medium">
+              <span className="ml-3 text-xs text-neutral-400 font-medium truncate min-w-0">
                 Residential Purchase Agreement — {formData?.propertyAddress ?? ""}
               </span>
             </div>
@@ -189,9 +189,9 @@ export default function GeneratingView() {
 
           <div
             ref={scrollRef}
-            className="h-[calc(100dvh-240px)] md:h-[calc(100dvh-320px)] overflow-y-auto px-4 sm:px-8 py-6"
+            className="h-[calc(100dvh-240px)] md:h-[calc(100dvh-320px)] overflow-y-auto overflow-x-hidden px-4 sm:px-8 py-6"
           >
-            <div className="prose-contract">
+            <div className="prose-contract break-words overflow-hidden">
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 components={{
