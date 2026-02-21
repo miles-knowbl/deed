@@ -80,7 +80,7 @@ async function handleEvent(event: PandaDocWebhookEvent) {
     const buyer = recipients.find((r) => r.signing_order === 2);
 
     if (agentEmail) {
-      await resend.emails.send({
+      const { error } = await resend.emails.send({
         from: FROM_EMAIL,
         to: agentEmail,
         subject: `Broker Signed — Purchase Agreement — ${propertyAddress}`,
@@ -97,6 +97,7 @@ async function handleEvent(event: PandaDocWebhookEvent) {
           })
         ),
       });
+      if (error) console.error("[webhook] Resend broker-signed error:", error);
     }
   }
 
@@ -106,7 +107,7 @@ async function handleEvent(event: PandaDocWebhookEvent) {
     const seller = recipients.find((r) => r.signing_order === 3);
 
     if (agentEmail) {
-      await resend.emails.send({
+      const { error } = await resend.emails.send({
         from: FROM_EMAIL,
         to: agentEmail,
         subject: `Buyer Signed — Purchase Agreement — ${propertyAddress}`,
@@ -123,6 +124,7 @@ async function handleEvent(event: PandaDocWebhookEvent) {
           })
         ),
       });
+      if (error) console.error("[webhook] Resend buyer-signed error:", error);
     }
   }
 
@@ -149,7 +151,7 @@ async function handleEvent(event: PandaDocWebhookEvent) {
 
     for (const party of allParties) {
       if (!party?.email) continue;
-      await resend.emails.send({
+      const { error } = await resend.emails.send({
         from: FROM_EMAIL,
         to: party.email,
         subject: `Fully Executed: Purchase Agreement for ${propertyAddress}`,
@@ -160,10 +162,11 @@ async function handleEvent(event: PandaDocWebhookEvent) {
           })
         ),
       });
+      if (error) console.error("[webhook] Resend fully-executed error:", party.email, error);
     }
 
     if (agentEmail) {
-      await resend.emails.send({
+      const { error } = await resend.emails.send({
         from: FROM_EMAIL,
         to: agentEmail,
         subject: `Fully Executed — Purchase Agreement — ${propertyAddress}`,
@@ -178,6 +181,7 @@ async function handleEvent(event: PandaDocWebhookEvent) {
           })
         ),
       });
+      if (error) console.error("[webhook] Resend fully-executed agent error:", error);
     }
   }
 }

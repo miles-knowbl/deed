@@ -10,9 +10,9 @@ import {
   Section,
   Text,
 } from "@react-email/components";
+import { formatUSD } from "@/lib/utils";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "#";
-import { formatUSD } from "@/lib/utils";
 
 interface FullyExecutedEmailProps {
   recipientName: string;

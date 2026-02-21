@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
       const resend = getResend();
 
       // Agent status ping only — PandaDoc handles the broker signing email directly.
-      await resend.emails.send({
+      const { error: emailError } = await resend.emails.send({
         from: FROM_EMAIL,
         to: formData.agentEmail,
         subject: `Sent to Broker — Purchase Agreement — ${formData.propertyAddress}`,
@@ -37,6 +37,9 @@ export async function POST(req: NextRequest) {
           })
         ),
       });
+      if (emailError) {
+        console.error("[/api/send-contract] Resend error:", emailError);
+      }
     }
 
     return Response.json({ success: true, pandaDocId, sandboxSkipped });
