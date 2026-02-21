@@ -6,10 +6,13 @@ import {
   Heading,
   Hr,
   Html,
+  Link,
   Preview,
   Section,
   Text,
 } from "@react-email/components";
+
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "#";
 import { formatUSD } from "@/lib/utils";
 
 interface BrokerSignEmailProps {
@@ -36,7 +39,7 @@ export default function BrokerSignEmail({
       <Body style={body}>
         <Container style={container}>
           <Section style={header}>
-            <Text style={logo}>deed</Text>
+            <Link href={APP_URL} style={logoLink}>deed</Link>
           </Section>
 
           <Section style={content}>
@@ -76,6 +79,7 @@ export default function BrokerSignEmail({
             <Text style={footerText}>
               This link is unique to you and should not be shared.
             </Text>
+            <Link href={APP_URL} style={tryLink}>Try Deed →</Link>
           </Section>
         </Container>
       </Body>
@@ -98,12 +102,25 @@ const header = {
   padding: "32px 40px 0",
 };
 
-const logo = {
+const logoLink = {
   fontSize: "22px",
   fontWeight: "700",
   color: "#1a1a1a",
   letterSpacing: "-0.5px",
   margin: "0 0 32px",
+  textDecoration: "none",
+  display: "inline-block",
+};
+
+const tryLink = {
+  display: "block",
+  color: "#1a1a1a",
+  fontSize: "12px",
+  fontWeight: "600",
+  textDecoration: "none",
+  textAlign: "center" as const,
+  margin: "12px 0 0",
+  letterSpacing: "0.02em",
 };
 
 const content = {

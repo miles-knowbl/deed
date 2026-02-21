@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import PDFDocument from "pdfkit";
+import { PDFDocument as LibPDF, PDFName, PDFString } from "pdf-lib";
 import type { ContractFormData } from "@/types/contract";
 
 const PANDADOC_API_BASE = "https://api.pandadoc.com/public/v1";
@@ -15,7 +16,8 @@ export async function createAndSendContract(
   formData: ContractFormData,
   contractText: string
 ): Promise<{ id: string; sandboxSkipped: boolean; brokerLink: string; buyerLink: string; sellerLink: string }> {
-  const pdfBuffer = await contractTextToPdf(contractText, formData.propertyAddress);
+  const rawPdf = await contractTextToPdf(contractText, formData.propertyAddress);
+  const pdfBuffer = await addSignatureFields(rawPdf);
 
   // Step 1: Upload PDF (multipart form — PandaDoc requires PDF or DOCX, not HTML)
   const form = new FormData();
@@ -56,7 +58,12 @@ export async function createAndSendContract(
       downPaymentPercent: String(formData.downPaymentPercent),
     },
     tags: ["deed-app", "purchase-agreement"],
-    parse_form_fields: false,
+    parse_form_fields: true,
+    fields: {
+      broker_signature: { role: "Broker" },
+      buyer_signature: { role: "Buyer" },
+      seller_signature: { role: "Seller" },
+    },
   };
 
   form.append("data", JSON.stringify(documentData));
@@ -137,6 +144,67 @@ async function waitForDocumentReady(docId: string, maxWaitMs = 60000): Promise<v
     }
   }
   throw new Error("Document did not reach ready state in time");
+}
+
+async function addSignatureFields(pdfBuffer: Buffer): Promise<Buffer> {
+  const pdfDoc = await LibPDF.load(pdfBuffer);
+  const sigPage = pdfDoc.addPage([612, 792]); // Letter size
+
+  // Draw signature section labels and lines
+  const { width, height } = sigPage.getSize();
+  const margin = 60;
+  const colRight = width / 2 + margin;
+
+  // Helper to draw a signature block (label + line) at a given y
+  function drawSigBlock(label: string, x: number, y: number, lineWidth: number) {
+    sigPage.drawText(label, { x, y: y + 20, size: 9 });
+    sigPage.drawLine({ start: { x, y }, end: { x: x + lineWidth, y }, thickness: 0.5 });
+  }
+
+  sigPage.drawText("SIGNATURE PAGE", { x: margin, y: height - 60, size: 13 });
+  sigPage.drawText(`Purchase Agreement`, { x: margin, y: height - 80, size: 10 });
+
+  drawSigBlock("Broker Signature", margin, 580, 200);
+  drawSigBlock("Date", colRight, 580, 160);
+
+  drawSigBlock("Buyer Signature", margin, 440, 200);
+  drawSigBlock("Date", colRight, 440, 160);
+
+  drawSigBlock("Seller / Listing Agent Signature", margin, 300, 200);
+  drawSigBlock("Date", colRight, 300, 160);
+
+  // Build AcroForm with signature fields overlaid on signature lines
+  const context = pdfDoc.context;
+  const fieldsArray = context.obj([]);
+  const acroFormRef = context.nextRef();
+  context.assign(acroFormRef, context.obj({
+    Fields: fieldsArray,
+    SigFlags: context.obj(3),
+  }));
+  pdfDoc.catalog.set(PDFName.of("AcroForm"), acroFormRef);
+
+  function createSigWidget(name: string, rect: [number, number, number, number]) {
+    const ref = context.nextRef();
+    context.assign(ref, context.obj({
+      Type: PDFName.of("Annot"),
+      Subtype: PDFName.of("Widget"),
+      FT: PDFName.of("Sig"),
+      T: PDFString.of(name),
+      Rect: context.obj(rect),
+      P: sigPage.ref,
+      F: context.obj(4),
+    }));
+    let annots = sigPage.node.get(PDFName.of("Annots"));
+    if (!annots) { annots = context.obj([]); sigPage.node.set(PDFName.of("Annots"), annots); }
+    (annots as ReturnType<typeof context.obj>).push(ref);
+    (fieldsArray as ReturnType<typeof context.obj>).push(ref);
+  }
+
+  createSigWidget("broker_signature", [margin, 530, margin + 200, 580]);
+  createSigWidget("buyer_signature",  [margin, 390, margin + 200, 440]);
+  createSigWidget("seller_signature", [margin, 250, margin + 200, 300]);
+
+  return Buffer.from(await pdfDoc.save());
 }
 
 function contractTextToPdf(text: string, propertyAddress: string): Promise<Buffer> {

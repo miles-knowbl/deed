@@ -5,10 +5,13 @@ import {
   Heading,
   Hr,
   Html,
+  Link,
   Preview,
   Section,
   Text,
 } from "@react-email/components";
+
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "#";
 import { formatUSD } from "@/lib/utils";
 
 interface FullyExecutedEmailProps {
@@ -37,7 +40,7 @@ export default function FullyExecutedEmail({
       <Body style={body}>
         <Container style={container}>
           <Section style={header}>
-            <Text style={logo}>deed</Text>
+            <Link href={APP_URL} style={logoLink}>deed</Link>
           </Section>
 
           <Section style={content}>
@@ -81,6 +84,7 @@ export default function FullyExecutedEmail({
             <Text style={footerText}>
               Sent via <strong>deed</strong> — Real estate contracts, simplified.
             </Text>
+            <Link href={APP_URL} style={tryLink}>Try Deed →</Link>
           </Section>
         </Container>
       </Body>
@@ -91,7 +95,8 @@ export default function FullyExecutedEmail({
 const body = { backgroundColor: "#f9f8f7", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" };
 const container = { margin: "0 auto", padding: "20px 0 48px", maxWidth: "560px" };
 const header = { padding: "32px 40px 0" };
-const logo = { fontSize: "22px", fontWeight: "700", color: "#1a1a1a", letterSpacing: "-0.5px", margin: "0 0 32px" };
+const logoLink = { fontSize: "22px", fontWeight: "700", color: "#1a1a1a", letterSpacing: "-0.5px", margin: "0 0 32px", textDecoration: "none", display: "inline-block" };
+const tryLink = { display: "block", color: "#1a1a1a", fontSize: "12px", fontWeight: "600", textDecoration: "none", textAlign: "center" as const, margin: "12px 0 0", letterSpacing: "0.02em" };
 const content = { backgroundColor: "#ffffff", borderRadius: "12px", padding: "40px", border: "1px solid #e8e6e3", boxShadow: "0 2px 10px -3px rgba(0,0,0,0.08)" };
 const badge = { marginBottom: "20px" };
 const badgeText = { display: "inline-block" as const, backgroundColor: "#f0f0f0", color: "#3a3a3a", fontSize: "11px", fontWeight: "600", letterSpacing: "0.08em", textTransform: "uppercase" as const, padding: "4px 12px", borderRadius: "20px", margin: "0" };
