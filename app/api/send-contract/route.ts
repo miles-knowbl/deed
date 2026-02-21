@@ -6,6 +6,7 @@ import AgentStatusEmail from "@/emails/AgentStatusEmail";
 import type { ContractFormData } from "@/types/contract";
 
 export const runtime = "nodejs";
+export const maxDuration = 90;
 
 export async function POST(req: NextRequest) {
   try {

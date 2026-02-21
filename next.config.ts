@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ["pandadoc-node-client"],
+  serverExternalPackages: ["pdfkit"],
 };
 
 export default nextConfig;

@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import PDFDocument from "pdfkit";
 import type { ContractFormData } from "@/types/contract";
 
 const PANDADOC_API_BASE = "https://api.pandadoc.com/public/v1";
@@ -14,12 +15,12 @@ export async function createAndSendContract(
   formData: ContractFormData,
   contractText: string
 ): Promise<{ id: string; brokerLink: string; buyerLink: string; sellerLink: string }> {
-  const htmlContent = contractTextToHtml(contractText, formData.propertyAddress);
+  const pdfBuffer = await contractTextToPdf(contractText, formData.propertyAddress);
 
-  // Step 1: Upload document as HTML file (multipart form)
+  // Step 1: Upload PDF (multipart form — PandaDoc requires PDF or DOCX, not HTML)
   const form = new FormData();
-  const blob = new Blob([htmlContent], { type: "text/html" });
-  form.append("file", blob, "contract.html");
+  const blob = new Blob([pdfBuffer.buffer as ArrayBuffer], { type: "application/pdf" });
+  form.append("file", blob, "contract.pdf");
 
   const documentData = {
     name: `Purchase Agreement — ${formData.propertyAddress}`,
@@ -64,7 +65,7 @@ export async function createAndSendContract(
     method: "POST",
     headers: {
       Authorization: `API-Key ${process.env.PANDADOC_API_KEY}`,
-      // Note: no Content-Type header — let FormData set it with boundary
+      // No Content-Type — let FormData set it with the multipart boundary
     },
     body: form,
   });
@@ -77,10 +78,10 @@ export async function createAndSendContract(
   const created = await createRes.json();
   const docId: string = created.id;
 
-  // Step 2: Poll until document is ready
+  // Step 2: Poll until document reaches draft state
   await waitForDocumentReady(docId);
 
-  // Step 3: Send document (starts signing workflow)
+  // Step 3: Send document (starts the signing chain)
   const sendRes = await fetch(`${PANDADOC_API_BASE}/documents/${docId}/send`, {
     method: "POST",
     headers: headers(),
@@ -96,8 +97,7 @@ export async function createAndSendContract(
     throw new Error(`PandaDoc send failed: ${sendRes.status} — ${error}`);
   }
 
-  // PandaDoc sends signing links to recipients via email automatically.
-  // Return the document view URL for our own reference.
+  // PandaDoc delivers signing links to each recipient directly via their own emails.
   return {
     id: docId,
     brokerLink: `https://app.pandadoc.com/a/#/documents/${docId}`,
@@ -106,9 +106,11 @@ export async function createAndSendContract(
   };
 }
 
-async function waitForDocumentReady(docId: string, maxWaitMs = 20000): Promise<void> {
+async function waitForDocumentReady(docId: string, maxWaitMs = 60000): Promise<void> {
   const start = Date.now();
+  const pollInterval = 6000; // 6s between checks to respect sandbox rate limits
   while (Date.now() - start < maxWaitMs) {
+    await new Promise((r) => setTimeout(r, pollInterval));
     const res = await fetch(`${PANDADOC_API_BASE}/documents/${docId}`, {
       headers: headers(),
     });
@@ -116,37 +118,62 @@ async function waitForDocumentReady(docId: string, maxWaitMs = 20000): Promise<v
       const doc = await res.json();
       const status: string = doc.status;
       if (status === "document.draft" || status === "document.sent") return;
+      if (status === "document.error") {
+        throw new Error("PandaDoc document processing failed");
+      }
+      // document.uploaded / document.processing are intermediate — keep polling
     }
-    await new Promise((r) => setTimeout(r, 1500));
   }
   throw new Error("Document did not reach ready state in time");
 }
 
-function contractTextToHtml(text: string, propertyAddress: string): string {
-  const escaped = text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+function contractTextToPdf(text: string, propertyAddress: string): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    const doc = new PDFDocument({ margin: 60, size: "LETTER" });
+    const chunks: Buffer[] = [];
 
-  const withBreaks = escaped.replace(/\n/g, "<br/>");
+    doc.on("data", (chunk: Buffer) => chunks.push(chunk));
+    doc.on("end", () => resolve(Buffer.concat(chunks)));
+    doc.on("error", reject);
 
-  return `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8" />
-  <style>
-    body { font-family: Georgia, serif; font-size: 11pt; line-height: 1.6; color: #1a1a1a; max-width: 800px; margin: 0 auto; padding: 40px; }
-    h1 { font-size: 16pt; text-align: center; margin-bottom: 8px; }
-    .subtitle { text-align: center; color: #666; margin-bottom: 32px; font-size: 10pt; }
-    .body { white-space: pre-wrap; }
-  </style>
-</head>
-<body>
-  <h1>RESIDENTIAL PURCHASE AGREEMENT</h1>
-  <div class="subtitle">Property: ${propertyAddress}</div>
-  <div class="body">${withBreaks}</div>
-</body>
-</html>`;
+    // Title
+    doc.fontSize(14).font("Helvetica-Bold").text("RESIDENTIAL PURCHASE AGREEMENT", {
+      align: "center",
+    });
+    doc.moveDown(0.4);
+    doc.fontSize(10).font("Helvetica").fillColor("#666666").text(`Property: ${propertyAddress}`, {
+      align: "center",
+    });
+    doc.moveDown(1.5);
+
+    // Body — render each line, treating markdown headings as bold text
+    doc.fillColor("#1a1a1a").fontSize(10).font("Helvetica");
+    const lines = text.split("\n");
+    for (const line of lines) {
+      if (line.startsWith("## ")) {
+        doc.moveDown(0.5);
+        doc.font("Helvetica-Bold").text(line.replace(/^## /, ""));
+        doc.font("Helvetica");
+        doc.moveDown(0.2);
+      } else if (line.startsWith("# ")) {
+        doc.moveDown(0.5);
+        doc.fontSize(12).font("Helvetica-Bold").text(line.replace(/^# /, ""));
+        doc.fontSize(10).font("Helvetica");
+        doc.moveDown(0.2);
+      } else if (line.startsWith("**") && line.endsWith("**")) {
+        doc.font("Helvetica-Bold").text(line.replace(/\*\*/g, ""));
+        doc.font("Helvetica");
+      } else if (line.trim() === "" || line.trim() === "---") {
+        doc.moveDown(0.5);
+      } else {
+        // Strip remaining markdown (bold inline, etc.)
+        const clean = line.replace(/\*\*(.*?)\*\*/g, "$1").replace(/^[-*]\s/, "• ");
+        doc.text(clean, { lineGap: 2 });
+      }
+    }
+
+    doc.end();
+  });
 }
 
 export function verifyWebhookSignature(payload: string, signature: string): boolean {
