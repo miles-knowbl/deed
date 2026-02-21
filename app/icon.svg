@@ -1,0 +1,19 @@
+<svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Black rounded square background -->
+  <rect width="56" height="56" rx="10" fill="#1a1a1a"/>
+
+  <!-- Document shape: 24w × 30h, centered: x=16, y=13 -->
+  <!-- Folded corner: 7px → notch at (33,13), fold at (40,20) -->
+  <path d="M 16 13 L 33 13 L 40 20 L 40 43 L 16 43 Z" fill="white"/>
+
+  <!-- Fold shadow triangle -->
+  <path d="M 33 13 L 33 20 L 40 20 Z" fill="#1a1a1a"/>
+
+  <!-- Content lines -->
+  <line x1="20" y1="25" x2="36" y2="25" stroke="#1a1a1a" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="20" y1="29" x2="36" y2="29" stroke="#1a1a1a" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="20" y1="33" x2="30" y2="33" stroke="#1a1a1a" stroke-width="1.5" stroke-linecap="round"/>
+
+  <!-- Signature line -->
+  <line x1="20" y1="39" x2="36" y2="39" stroke="#1a1a1a" stroke-width="1" stroke-linecap="round" stroke-dasharray="2 1.5"/>
+</svg>

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { FileText } from "lucide-react";
+import Logo from "@/components/Logo";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -112,11 +112,8 @@ export default function GeneratingView() {
     <div className="min-h-screen bg-[#f9f8f7] flex flex-col">
       {/* Header */}
       <div className="border-b border-neutral-200 bg-white/80 backdrop-blur-sm">
-        <div className="max-w-3xl mx-auto px-4 py-4 flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg bg-neutral-900 flex items-center justify-center">
-            <FileText className="w-3.5 h-3.5 text-white" />
-          </div>
-          <span className="text-lg font-semibold tracking-tight text-neutral-900">deed</span>
+        <div className="max-w-3xl mx-auto px-4 py-4">
+          <Logo iconSize={28} textSize="text-lg" gap="gap-2" />
         </div>
       </div>
 

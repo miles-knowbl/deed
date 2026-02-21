@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { FileText, Send, ArrowLeft, CheckCircle2, Loader2, Users } from "lucide-react";
+import Logo from "@/components/Logo";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { toast } from "sonner";
@@ -130,12 +131,7 @@ export default function ContractReview() {
             >
               <ArrowLeft className="w-4 h-4" />
             </button>
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-neutral-900 flex items-center justify-center">
-                <FileText className="w-3.5 h-3.5 text-white" />
-              </div>
-              <span className="text-base font-semibold tracking-tight text-neutral-900">deed</span>
-            </div>
+            <Logo iconSize={28} textSize="text-base" gap="gap-2" />
           </div>
           <span className="text-xs text-neutral-400 font-medium uppercase tracking-wide">Review Contract</span>
         </div>

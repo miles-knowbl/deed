@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { FileText, Loader2 } from "lucide-react";
+import Logo from "@/components/Logo";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -191,11 +192,8 @@ export default function ContractForm() {
           transition={{ duration: 0.4 }}
           className="mb-10"
         >
-          <div className="flex items-center gap-2.5 mb-6">
-            <div className="w-8 h-8 rounded-lg bg-neutral-900 flex items-center justify-center">
-              <FileText className="w-4 h-4 text-white" />
-            </div>
-            <span className="text-xl font-semibold tracking-tight text-neutral-900">deed</span>
+          <div className="mb-6">
+            <Logo iconSize={32} textSize="text-xl" gap="gap-2.5" />
           </div>
           <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-neutral-900 mb-2">
             New Purchase Agreement
