@@ -124,7 +124,7 @@ describe("POST /api/generate", () => {
 
     await POST(makeRequest(formData));
     expect(streamSpy).toHaveBeenCalledOnce();
-    const callArgs = streamSpy.mock.calls[0]![0] as { model: string; system: string; messages: Array<{ role: string; content: string }> };
+    const callArgs = (streamSpy.mock.calls as unknown[][])[0][0] as { model: string; system: string; messages: Array<{ role: string; content: string }> };
     expect(callArgs.model).toBe("claude-opus-4-6");
   });
 
@@ -140,7 +140,7 @@ describe("POST /api/generate", () => {
     }));
 
     await POST(makeRequest(formData));
-    const callArgs = streamSpy.mock.calls[0]![0] as { model: string; system: string; messages: Array<{ role: string; content: string }> };
+    const callArgs = (streamSpy.mock.calls as unknown[][])[0][0] as { model: string; system: string; messages: Array<{ role: string; content: string }> };
     expect(callArgs.system).toBe(CONTRACT_SYSTEM_PROMPT);
   });
 
@@ -156,7 +156,7 @@ describe("POST /api/generate", () => {
     }));
 
     await POST(makeRequest(formData));
-    const callArgs = streamSpy.mock.calls[0]![0] as { model: string; system: string; messages: Array<{ role: string; content: string }> };
+    const callArgs = (streamSpy.mock.calls as unknown[][])[0][0] as { model: string; system: string; messages: Array<{ role: string; content: string }> };
     const expectedContent = buildContractPrompt(formData);
     expect(callArgs.messages[0].role).toBe("user");
     expect(callArgs.messages[0].content).toBe(expectedContent);

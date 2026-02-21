@@ -110,7 +110,7 @@ describe("POST /api/webhook/pandadoc", () => {
       const rawBody = JSON.stringify(events);
       await POST(makeRequest(events, rawBody) as unknown as NextRequest);
       expect(mockVerifySignature).toHaveBeenCalledOnce();
-      const firstArg = mockVerifySignature.mock.calls[0][0];
+      const firstArg = (mockVerifySignature.mock.calls as unknown[][])[0][0];
       expect(typeof firstArg).toBe("string");
       expect(firstArg).toBe(rawBody);
     });
@@ -189,7 +189,7 @@ describe("POST /api/webhook/pandadoc", () => {
       await POST(makeRequest([makeEvent(recipients)]) as unknown as NextRequest);
       const agentEmailCalls = vi.mocked(AgentStatusEmail).mock.calls;
       expect(agentEmailCalls.length).toBeGreaterThanOrEqual(1);
-      const props = agentEmailCalls[agentEmailCalls.length - 1][0] as Record<string, unknown>;
+      const props = agentEmailCalls[agentEmailCalls.length - 1][0] as unknown as Record<string, unknown>;
       expect(String(props.nextStepMessage)).toContain("Sam");
     });
 
@@ -327,7 +327,7 @@ describe("POST /api/webhook/pandadoc", () => {
       await POST(makeRequest([makeEvent(recipients)]) as unknown as NextRequest);
       const fullyExecutedCalls = vi.mocked(FullyExecutedEmail).mock.calls;
       expect(fullyExecutedCalls.length).toBeGreaterThan(0);
-      const props = fullyExecutedCalls[0][0] as Record<string, unknown>;
+      const props = fullyExecutedCalls[0][0] as unknown as Record<string, unknown>;
       expect(props.offerPrice).toBe(450000);
       expect(typeof props.offerPrice).toBe("number");
     });
@@ -341,7 +341,7 @@ describe("POST /api/webhook/pandadoc", () => {
       const docName = "Purchase Agreement — 456 Elm Ave, Chicago, IL 60601";
       await POST(makeRequest([makeEvent(recipients, baseMetadata, docName)]) as unknown as NextRequest);
       const fullyExecutedCalls = vi.mocked(FullyExecutedEmail).mock.calls;
-      const props = fullyExecutedCalls[0][0] as Record<string, unknown>;
+      const props = fullyExecutedCalls[0][0] as unknown as Record<string, unknown>;
       expect(props.propertyAddress).toBe("456 Elm Ave, Chicago, IL 60601");
     });
   });
