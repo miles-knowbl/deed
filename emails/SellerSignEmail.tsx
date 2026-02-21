@@ -48,7 +48,7 @@ export default function SellerSignEmail({
             <Text style={greeting}>Hi {sellerName},</Text>
             <Text style={paragraph}>
               You have received a purchase offer for <strong>{propertyAddress}</strong>.
-              The offer has been signed by both the buyer's broker and the buyer.
+              The offer has been signed by both the buyer&apos;s broker and the buyer.
               Please review and sign to execute this agreement.
             </Text>
 
@@ -59,7 +59,7 @@ export default function SellerSignEmail({
               <Text style={detailRow}><span style={labelStyle}>Down Payment</span> {downPaymentPercent}% ({formatUSD(offerPrice * downPaymentPercent / 100)})</Text>
               <Text style={detailRow}><span style={labelStyle}>Loan Type</span> {loanType}</Text>
               <Text style={detailRow}><span style={labelStyle}>Buyer</span> {buyerName}</Text>
-              <Text style={detailRow}><span style={labelStyle}>Buyer's Agent</span> {agentName}</Text>
+              <Text style={detailRow}><span style={labelStyle}>Buyer&apos;s Agent</span> {agentName}</Text>
             </Section>
 
             <Section style={ctaSection}>

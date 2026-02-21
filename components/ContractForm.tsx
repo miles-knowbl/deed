@@ -25,7 +25,7 @@ const ADDENDUM_LIST = [
   { key: "homeInspection", label: "Home Inspection Contingency" },
   { key: "financingContingency", label: "Financing Contingency" },
   { key: "appraisalContingency", label: "Appraisal Contingency" },
-  { key: "saleOfBuyersHome", label: "Sale of Buyer's Current Home Contingency" },
+  { key: "saleOfBuyersHome", label: "Sale of Buyer\u2019s Current Home Contingency" },
   { key: "hoaDisclosure", label: "HOA / Condo Association Disclosure" },
   { key: "asIs", label: "As-Is Sale Addendum" },
   { key: "leadBasedPaint", label: "Lead-Based Paint Disclosure (pre-1978)" },
@@ -201,7 +201,7 @@ export default function ContractForm() {
             New Purchase Agreement
           </h1>
           <p className="text-neutral-500 text-base">
-            Fill in the details below and we'll draft a complete, professional contract in seconds.
+            Fill in the details below and we&apos;ll draft a complete, professional contract in seconds.
           </p>
         </motion.div>
 
