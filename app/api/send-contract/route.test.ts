@@ -1,10 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import type { NextRequest } from "next/server";
 
 const mockSend = vi.fn().mockResolvedValue({ id: "resend-id" });
 
 vi.mock("@/lib/pandadoc", () => ({
   createAndSendContract: vi.fn().mockResolvedValue({
     id: "doc-abc",
+    sandboxSkipped: false,
     brokerLink: "https://pandadoc.com/doc-abc",
     buyerLink: "https://pandadoc.com/doc-abc",
     sellerLink: "https://pandadoc.com/doc-abc",
@@ -58,12 +60,12 @@ const formData: ContractFormData = {
 
 const contractText = "This Purchase Agreement is made between Sam Lee (Buyer) and Pat Rivera (Seller)...";
 
-function makeRequest(fd: ContractFormData, ct: string): Request {
+function makeRequest(fd: ContractFormData, ct: string): NextRequest {
   return new Request("http://localhost/api/send-contract", {
     method: "POST",
     body: JSON.stringify({ formData: fd, contractText: ct }),
     headers: { "Content-Type": "application/json" },
-  });
+  }) as unknown as NextRequest;
 }
 
 describe("POST /api/send-contract", () => {
@@ -73,40 +75,40 @@ describe("POST /api/send-contract", () => {
   });
 
   it("calls createAndSendContract with the formData and contractText from request body", async () => {
-    await POST(makeRequest(formData, contractText) as any);
+    await POST(makeRequest(formData, contractText));
     expect(createAndSendContract).toHaveBeenCalledOnce();
     expect(createAndSendContract).toHaveBeenCalledWith(formData, contractText);
   });
 
   it("sends exactly one Resend email (agent status ping only)", async () => {
-    await POST(makeRequest(formData, contractText) as any);
+    await POST(makeRequest(formData, contractText));
     expect(mockSend).toHaveBeenCalledTimes(1);
   });
 
   it("agent email goes to agentEmail, not brokerEmail", async () => {
-    await POST(makeRequest(formData, contractText) as any);
-    const sendCall = mockSend.mock.calls[0][0];
+    await POST(makeRequest(formData, contractText));
+    const sendCall = mockSend.mock.calls[0]![0] as { to: string; subject: string };
     expect(sendCall.to).toBe(formData.agentEmail);
     expect(sendCall.to).not.toBe(formData.brokerEmail);
   });
 
   it("email subject contains the propertyAddress", async () => {
-    await POST(makeRequest(formData, contractText) as any);
-    const sendCall = mockSend.mock.calls[0][0];
+    await POST(makeRequest(formData, contractText));
+    const sendCall = mockSend.mock.calls[0]![0] as { to: string; subject: string };
     expect(sendCall.subject).toContain(formData.propertyAddress);
   });
 
-  it("returns { success: true, pandaDocId: 'doc-abc' } on success", async () => {
-    const response = await POST(makeRequest(formData, contractText) as any);
+  it("returns { success: true, pandaDocId, sandboxSkipped: false } on success", async () => {
+    const response = await POST(makeRequest(formData, contractText));
     expect(response.status).toBe(200);
     const body = await response.json();
-    expect(body).toEqual({ success: true, pandaDocId: "doc-abc" });
+    expect(body).toEqual({ success: true, pandaDocId: "doc-abc", sandboxSkipped: false });
   });
 
   it("returns 500 with { error: 'Failed to send contract' } when createAndSendContract throws, and does not call send", async () => {
     vi.mocked(createAndSendContract).mockRejectedValueOnce(new Error("PandaDoc API failure"));
 
-    const response = await POST(makeRequest(formData, contractText) as any);
+    const response = await POST(makeRequest(formData, contractText));
     expect(response.status).toBe(500);
     const body = await response.json();
     expect(body).toEqual({ error: "Failed to send contract" });
@@ -116,7 +118,7 @@ describe("POST /api/send-contract", () => {
   it("returns 500 when Resend throws", async () => {
     mockSend.mockRejectedValueOnce(new Error("Resend API failure"));
 
-    const response = await POST(makeRequest(formData, contractText) as any);
+    const response = await POST(makeRequest(formData, contractText));
     expect(response.status).toBe(500);
     const body = await response.json();
     expect(body).toEqual({ error: "Failed to send contract" });

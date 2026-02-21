@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import type { NextRequest } from "next/server";
 
 const { mockVerifySignature, mockSend } = vi.hoisted(() => ({
   mockVerifySignature: vi.fn(() => true),
@@ -48,7 +49,7 @@ const makeRecipient = (order: number, completed: boolean) => ({
   signing_order: order,
 });
 
-function makeRequest(events: unknown[], rawBody?: string): Request {
+function makeRequest(events: unknown[], rawBody?: string): NextRequest {
   const body = rawBody ?? JSON.stringify(events);
   return new Request("http://localhost/api/webhook/pandadoc", {
     method: "POST",
@@ -57,7 +58,7 @@ function makeRequest(events: unknown[], rawBody?: string): Request {
       "x-pandadoc-signature": "test-sig",
       "Content-Type": "application/json",
     },
-  });
+  }) as unknown as NextRequest;
 }
 
 function makeEvent(
@@ -92,14 +93,14 @@ describe("POST /api/webhook/pandadoc", () => {
   describe("Authentication", () => {
     it("returns 401 when verifyWebhookSignature returns false", async () => {
       mockVerifySignature.mockReturnValueOnce(false);
-      const response = await POST(makeRequest([]) as any);
+      const response = await POST(makeRequest([]) as unknown as NextRequest);
       expect(response.status).toBe(401);
       const text = await response.text();
       expect(text).toBe("Unauthorized");
     });
 
     it("returns 200 and never calls send when signature is valid but events array is empty", async () => {
-      const response = await POST(makeRequest([]) as any);
+      const response = await POST(makeRequest([]) as unknown as NextRequest);
       expect(response.status).toBe(200);
       expect(mockSend).not.toHaveBeenCalled();
     });
@@ -107,7 +108,7 @@ describe("POST /api/webhook/pandadoc", () => {
     it("passes raw body string (not parsed JSON) to verifyWebhookSignature", async () => {
       const events = [makeEvent([makeRecipient(1, true), makeRecipient(2, false), makeRecipient(3, false)])];
       const rawBody = JSON.stringify(events);
-      await POST(makeRequest(events, rawBody) as any);
+      await POST(makeRequest(events, rawBody) as unknown as NextRequest);
       expect(mockVerifySignature).toHaveBeenCalledOnce();
       const firstArg = mockVerifySignature.mock.calls[0][0];
       expect(typeof firstArg).toBe("string");
@@ -129,7 +130,7 @@ describe("POST /api/webhook/pandadoc", () => {
           recipients: [makeRecipient(1, true)],
         },
       };
-      const response = await POST(makeRequest([event]) as any);
+      const response = await POST(makeRequest([event]) as unknown as NextRequest);
       expect(response.status).toBe(200);
       expect(mockSend).not.toHaveBeenCalled();
     });
@@ -145,7 +146,7 @@ describe("POST /api/webhook/pandadoc", () => {
           recipients: [],
         },
       };
-      const response = await POST(makeRequest([event]) as any);
+      const response = await POST(makeRequest([event]) as unknown as NextRequest);
       expect(response.status).toBe(200);
       expect(mockSend).not.toHaveBeenCalled();
     });
@@ -156,7 +157,7 @@ describe("POST /api/webhook/pandadoc", () => {
         makeRecipient(2, false),
         makeRecipient(3, false),
       ];
-      const response = await POST(makeRequest([makeEvent(recipients)]) as any);
+      const response = await POST(makeRequest([makeEvent(recipients)]) as unknown as NextRequest);
       expect(response.status).toBe(200);
       expect(mockSend).not.toHaveBeenCalled();
     });
@@ -171,7 +172,7 @@ describe("POST /api/webhook/pandadoc", () => {
         makeRecipient(2, false),
         makeRecipient(3, false),
       ];
-      const response = await POST(makeRequest([makeEvent(recipients)]) as any);
+      const response = await POST(makeRequest([makeEvent(recipients)]) as unknown as NextRequest);
       expect(response.status).toBe(200);
       expect(mockSend).toHaveBeenCalledTimes(1);
       const sendCall = mockSend.mock.calls[0][0];
@@ -185,7 +186,7 @@ describe("POST /api/webhook/pandadoc", () => {
         makeRecipient(2, false),
         makeRecipient(3, false),
       ];
-      await POST(makeRequest([makeEvent(recipients)]) as any);
+      await POST(makeRequest([makeEvent(recipients)]) as unknown as NextRequest);
       const agentEmailCalls = vi.mocked(AgentStatusEmail).mock.calls;
       expect(agentEmailCalls.length).toBeGreaterThanOrEqual(1);
       const props = agentEmailCalls[agentEmailCalls.length - 1][0] as Record<string, unknown>;
@@ -199,7 +200,7 @@ describe("POST /api/webhook/pandadoc", () => {
         makeRecipient(3, false),
       ];
       const metadata = { ...baseMetadata, agentEmail: "" };
-      const response = await POST(makeRequest([makeEvent(recipients, metadata)]) as any);
+      const response = await POST(makeRequest([makeEvent(recipients, metadata)]) as unknown as NextRequest);
       expect(response.status).toBe(200);
       expect(mockSend).not.toHaveBeenCalled();
     });
@@ -214,7 +215,7 @@ describe("POST /api/webhook/pandadoc", () => {
         makeRecipient(2, true),
         makeRecipient(3, false),
       ];
-      const response = await POST(makeRequest([makeEvent(recipients)]) as any);
+      const response = await POST(makeRequest([makeEvent(recipients)]) as unknown as NextRequest);
       expect(response.status).toBe(200);
       expect(mockSend).toHaveBeenCalledTimes(1);
       const sendCall = mockSend.mock.calls[0][0];
@@ -228,7 +229,7 @@ describe("POST /api/webhook/pandadoc", () => {
         makeRecipient(2, true),
         makeRecipient(3, false),
       ];
-      const response = await POST(makeRequest([makeEvent(recipients)]) as any);
+      const response = await POST(makeRequest([makeEvent(recipients)]) as unknown as NextRequest);
       expect(response.status).toBe(200);
       // justSigned is buyer (highest completed order=2); broker's prior completion is ignored
       expect(mockSend).toHaveBeenCalledTimes(1);
@@ -246,7 +247,7 @@ describe("POST /api/webhook/pandadoc", () => {
         makeRecipient(2, true),
         makeRecipient(3, true),
       ];
-      const response = await POST(makeRequest([makeEvent(recipients)]) as any);
+      const response = await POST(makeRequest([makeEvent(recipients)]) as unknown as NextRequest);
       expect(response.status).toBe(200);
       expect(mockSend).toHaveBeenCalledTimes(4);
     });
@@ -257,7 +258,7 @@ describe("POST /api/webhook/pandadoc", () => {
         makeRecipient(2, true),
         makeRecipient(3, true),
       ];
-      await POST(makeRequest([makeEvent(recipients)]) as any);
+      await POST(makeRequest([makeEvent(recipients)]) as unknown as NextRequest);
       const calls = mockSend.mock.calls.map((c) => c[0]);
       const partyEmails = calls.slice(0, 3).map((c) => c.to);
       expect(partyEmails).toContain("r1@test.com");
@@ -272,7 +273,7 @@ describe("POST /api/webhook/pandadoc", () => {
         makeRecipient(2, true),
         makeRecipient(3, true),
       ];
-      await POST(makeRequest([makeEvent(recipients)]) as any);
+      await POST(makeRequest([makeEvent(recipients)]) as unknown as NextRequest);
       expect(vi.mocked(FullyExecutedEmail).mock.calls.length).toBe(3);
     });
 
@@ -282,7 +283,7 @@ describe("POST /api/webhook/pandadoc", () => {
         makeRecipient(2, true),
         makeRecipient(3, true),
       ];
-      await POST(makeRequest([makeEvent(recipients)]) as any);
+      await POST(makeRequest([makeEvent(recipients)]) as unknown as NextRequest);
       const lastCall = mockSend.mock.calls[3][0];
       expect(lastCall.to).toBe("alex@realty.com");
       expect(lastCall.subject).toContain("Fully Executed");
@@ -312,7 +313,7 @@ describe("POST /api/webhook/pandadoc", () => {
           recipients,
         },
       };
-      await POST(makeRequest([event]) as any);
+      await POST(makeRequest([event]) as unknown as NextRequest);
       // broker skipped (no email), buyer + seller + agent = 3
       expect(mockSend).toHaveBeenCalledTimes(3);
     });
@@ -323,7 +324,7 @@ describe("POST /api/webhook/pandadoc", () => {
         makeRecipient(2, true),
         makeRecipient(3, true),
       ];
-      await POST(makeRequest([makeEvent(recipients)]) as any);
+      await POST(makeRequest([makeEvent(recipients)]) as unknown as NextRequest);
       const fullyExecutedCalls = vi.mocked(FullyExecutedEmail).mock.calls;
       expect(fullyExecutedCalls.length).toBeGreaterThan(0);
       const props = fullyExecutedCalls[0][0] as Record<string, unknown>;
@@ -338,7 +339,7 @@ describe("POST /api/webhook/pandadoc", () => {
         makeRecipient(3, true),
       ];
       const docName = "Purchase Agreement — 456 Elm Ave, Chicago, IL 60601";
-      await POST(makeRequest([makeEvent(recipients, baseMetadata, docName)]) as any);
+      await POST(makeRequest([makeEvent(recipients, baseMetadata, docName)]) as unknown as NextRequest);
       const fullyExecutedCalls = vi.mocked(FullyExecutedEmail).mock.calls;
       const props = fullyExecutedCalls[0][0] as Record<string, unknown>;
       expect(props.propertyAddress).toBe("456 Elm Ave, Chicago, IL 60601");
@@ -355,7 +356,7 @@ describe("POST /api/webhook/pandadoc", () => {
         makeRecipient(3, false),
       ];
       const event = makeEvent(recipients);
-      const response = await POST(makeRequest([event, event]) as any);
+      const response = await POST(makeRequest([event, event]) as unknown as NextRequest);
       expect(response.status).toBe(200);
       expect(mockSend).toHaveBeenCalledTimes(2);
     });
@@ -367,7 +368,7 @@ describe("POST /api/webhook/pandadoc", () => {
         makeRecipient(2, false),
         makeRecipient(3, false),
       ];
-      const response = await POST(makeRequest([makeEvent(recipients)]) as any);
+      const response = await POST(makeRequest([makeEvent(recipients)]) as unknown as NextRequest);
       expect(response.status).toBe(500);
       const text = await response.text();
       expect(text).toBe("Internal Server Error");
