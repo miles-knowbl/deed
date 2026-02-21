@@ -15,28 +15,31 @@ export async function POST(req: NextRequest) {
 
     // Create PandaDoc document + start signing chain.
     // PandaDoc sends its own signing request email to the broker automatically (silent: false).
-    const { id: pandaDocId } = await createAndSendContract(formData, contractText);
+    const { id: pandaDocId, sandboxSkipped } = await createAndSendContract(formData, contractText);
 
-    const resend = getResend();
+    // Skip agent email in sandbox mode — the document wasn't actually sent.
+    if (!sandboxSkipped) {
+      const resend = getResend();
 
-    // Agent status ping only — PandaDoc handles the broker signing email directly.
-    await resend.emails.send({
-      from: FROM_EMAIL,
-      to: formData.agentEmail,
-      subject: `Sent to Broker — Purchase Agreement — ${formData.propertyAddress}`,
-      html: await render(
-        AgentStatusEmail({
-          agentName: formData.agentName,
-          propertyAddress: formData.propertyAddress,
-          statusMessage: "Contract sent to broker for signature",
-          signerName: formData.brokerName,
-          signerRole: "Broker",
-          nextStepMessage: `${formData.brokerName} has received the contract and will be notified to sign. Once they sign, it will automatically be sent to ${formData.buyerName} for their signature.`,
-        })
-      ),
-    });
+      // Agent status ping only — PandaDoc handles the broker signing email directly.
+      await resend.emails.send({
+        from: FROM_EMAIL,
+        to: formData.agentEmail,
+        subject: `Sent to Broker — Purchase Agreement — ${formData.propertyAddress}`,
+        html: await render(
+          AgentStatusEmail({
+            agentName: formData.agentName,
+            propertyAddress: formData.propertyAddress,
+            statusMessage: "Contract sent to broker for signature",
+            signerName: formData.brokerName,
+            signerRole: "Broker",
+            nextStepMessage: `${formData.brokerName} has received the contract and will be notified to sign. Once they sign, it will automatically be sent to ${formData.buyerName} for their signature.`,
+          })
+        ),
+      });
+    }
 
-    return Response.json({ success: true, pandaDocId });
+    return Response.json({ success: true, pandaDocId, sandboxSkipped });
   } catch (error) {
     console.error("[/api/send-contract] Error:", error);
     return Response.json(

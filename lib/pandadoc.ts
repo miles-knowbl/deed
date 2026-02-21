@@ -14,7 +14,7 @@ function headers() {
 export async function createAndSendContract(
   formData: ContractFormData,
   contractText: string
-): Promise<{ id: string; brokerLink: string; buyerLink: string; sellerLink: string }> {
+): Promise<{ id: string; sandboxSkipped: boolean; brokerLink: string; buyerLink: string; sellerLink: string }> {
   const pdfBuffer = await contractTextToPdf(contractText, formData.propertyAddress);
 
   // Step 1: Upload PDF (multipart form — PandaDoc requires PDF or DOCX, not HTML)
@@ -94,12 +94,24 @@ export async function createAndSendContract(
 
   if (!sendRes.ok) {
     const error = await sendRes.text();
+    // Sandbox-only restriction: sending to recipients outside the PandaDoc org is blocked.
+    // Treat this as a soft failure — document exists and is ready; sending is skipped.
+    if (sendRes.status === 403 && error.includes("outside of your organization")) {
+      return {
+        id: docId,
+        sandboxSkipped: true,
+        brokerLink: `https://app.pandadoc.com/a/#/documents/${docId}`,
+        buyerLink: `https://app.pandadoc.com/a/#/documents/${docId}`,
+        sellerLink: `https://app.pandadoc.com/a/#/documents/${docId}`,
+      };
+    }
     throw new Error(`PandaDoc send failed: ${sendRes.status} — ${error}`);
   }
 
   // PandaDoc delivers signing links to each recipient directly via their own emails.
   return {
     id: docId,
+    sandboxSkipped: false,
     brokerLink: `https://app.pandadoc.com/a/#/documents/${docId}`,
     buyerLink: `https://app.pandadoc.com/a/#/documents/${docId}`,
     sellerLink: `https://app.pandadoc.com/a/#/documents/${docId}`,

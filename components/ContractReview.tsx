@@ -17,6 +17,7 @@ export default function ContractReview() {
   const { formData, contractText, setPandaDocId } = useContractStore();
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+  const [sandboxSkipped, setSandboxSkipped] = useState(false);
 
   if (!formData || !contractText) {
     if (typeof window !== "undefined") router.push("/");
@@ -34,10 +35,15 @@ export default function ContractReview() {
 
       if (!res.ok) throw new Error("Failed to send");
 
-      const { pandaDocId } = await res.json();
+      const { pandaDocId, sandboxSkipped: skipped } = await res.json();
       setPandaDocId(pandaDocId);
+      setSandboxSkipped(!!skipped);
       setSent(true);
-      toast.success("Contract sent to broker for signature!");
+      if (skipped) {
+        toast.info("Sandbox mode — document created but not sent (PandaDoc org restriction).");
+      } else {
+        toast.success("Contract sent to broker for signature!");
+      }
     } catch {
       toast.error("Failed to send contract. Please try again.");
       setSending(false);
@@ -62,11 +68,22 @@ export default function ContractReview() {
             <CheckCircle2 className="w-7 h-7 text-neutral-900" />
           </motion.div>
 
-          <h2 className="text-xl font-semibold text-neutral-900 mb-2 tracking-tight">Contract Sent</h2>
+          <h2 className="text-xl font-semibold text-neutral-900 mb-2 tracking-tight">
+            {sandboxSkipped ? "Document Created" : "Contract Sent"}
+          </h2>
           <p className="text-neutral-500 text-sm leading-relaxed mb-6">
-            The purchase agreement has been sent to{" "}
-            <strong className="text-neutral-700">{formData.brokerName}</strong> for their
-            signature. The signing chain will proceed automatically.
+            {sandboxSkipped ? (
+              <>
+                Document created successfully in PandaDoc.{" "}
+                <span className="text-amber-600 font-medium">Sandbox mode</span> — sending to external recipients is blocked by PandaDoc until a production API key is configured.
+              </>
+            ) : (
+              <>
+                The purchase agreement has been sent to{" "}
+                <strong className="text-neutral-700">{formData.brokerName}</strong> for their
+                signature. The signing chain will proceed automatically.
+              </>
+            )}
           </p>
 
           <div className="bg-neutral-50 rounded-xl p-4 text-left space-y-2.5 mb-6 border border-neutral-100">
