@@ -197,10 +197,10 @@ export default function ContractForm() {
             </div>
             <span className="text-xl font-semibold tracking-tight text-neutral-900">deed</span>
           </div>
-          <h1 className="text-3xl font-semibold tracking-tight text-neutral-900 mb-2">
+          <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-neutral-900 mb-2">
             New Purchase Agreement
           </h1>
-          <p className="text-neutral-500 text-base">
+          <p className="text-neutral-500 text-sm sm:text-base">
             Fill in the details below and we&apos;ll draft a complete, professional contract in seconds.
           </p>
         </motion.div>
@@ -211,7 +211,7 @@ export default function ContractForm() {
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-6 sm:p-8 space-y-8"
+            className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-4 sm:p-6 md:p-8 space-y-8"
           >
             {/* Broker */}
             <FieldGroup title="Broker">

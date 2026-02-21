@@ -49,7 +49,7 @@ export default function ContractReview() {
           initial={{ opacity: 0, scale: 0.95, y: 12 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="max-w-md w-full bg-white rounded-2xl border border-neutral-200 shadow-sm p-10 text-center"
+          className="max-w-md w-full bg-white rounded-2xl border border-neutral-200 shadow-sm p-6 sm:p-10 text-center"
         >
           <motion.div
             initial={{ scale: 0 }}
@@ -128,7 +128,7 @@ export default function ContractReview() {
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="grid grid-cols-2 sm:grid-cols-4 gap-3"
+          className="grid grid-cols-2 md:grid-cols-4 gap-3"
         >
           {[
             { label: "Property", value: formData.propertyAddress },
@@ -162,7 +162,7 @@ export default function ContractReview() {
             <span className="text-xs text-neutral-400">{contractText.length.toLocaleString()} characters</span>
           </div>
 
-          <div className="h-[calc(100vh-440px)] min-h-[400px] overflow-y-auto px-8 py-6 font-mono text-[13px] leading-relaxed text-neutral-800 whitespace-pre-wrap">
+          <div className="h-[calc(100dvh-360px)] md:h-[calc(100dvh-440px)] min-h-[280px] overflow-y-auto px-4 sm:px-8 py-6 font-mono text-[13px] leading-relaxed text-neutral-800 whitespace-pre-wrap">
             {contractText}
           </div>
         </motion.div>
@@ -192,7 +192,7 @@ export default function ContractReview() {
                     <p className="text-[10px] text-neutral-400 mt-0.5">{role}</p>
                   </div>
                 </div>
-                {i < 2 && <span className="text-neutral-300 text-sm">→</span>}
+                {i < 2 && <span className="hidden sm:inline text-neutral-300 text-sm">→</span>}
               </div>
             ))}
           </div>
@@ -223,7 +223,7 @@ export default function ContractReview() {
               </>
             )}
           </Button>
-          <p className="text-center text-xs text-neutral-400 mt-2">
+          <p className="text-center text-xs text-neutral-400 mt-2 truncate px-4">
             Sends to {formData.brokerName} → {formData.buyerName} → {formData.sellerName}
           </p>
         </motion.div>

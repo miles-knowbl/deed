@@ -191,7 +191,7 @@ export default function GeneratingView() {
 
           <div
             ref={scrollRef}
-            className="h-[calc(100vh-320px)] overflow-y-auto px-8 py-6 font-mono text-[13px] leading-relaxed text-neutral-800 whitespace-pre-wrap"
+            className="h-[calc(100dvh-240px)] md:h-[calc(100dvh-320px)] overflow-y-auto px-4 sm:px-8 py-6 font-mono text-[13px] leading-relaxed text-neutral-800 whitespace-pre-wrap"
           >
             {displayedText}
             {!done && (
