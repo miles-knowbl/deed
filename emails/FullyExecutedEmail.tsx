@@ -19,7 +19,6 @@ interface FullyExecutedEmailProps {
   brokerName: string;
   propertyAddress: string;
   offerPrice: number;
-  closingDate: string;
 }
 
 export default function FullyExecutedEmail({
@@ -30,7 +29,6 @@ export default function FullyExecutedEmail({
   brokerName,
   propertyAddress,
   offerPrice,
-  closingDate,
 }: FullyExecutedEmailProps) {
   return (
     <Html>
@@ -63,7 +61,7 @@ export default function FullyExecutedEmail({
               <Text style={detailRow}><span style={labelStyle}>Seller</span> {sellerName}</Text>
               <Text style={detailRow}><span style={labelStyle}>Agent</span> {agentName}</Text>
               <Text style={detailRow}><span style={labelStyle}>Broker</span> {brokerName}</Text>
-              <Text style={detailRow}><span style={labelStyle}>Target Closing</span> {closingDate}</Text>
+              <Text style={detailRow}><span style={labelStyle}>Target Closing</span> Per the agreement</Text>
             </Section>
 
             <Text style={paragraph}>

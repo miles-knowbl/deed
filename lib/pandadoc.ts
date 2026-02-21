@@ -106,7 +106,7 @@ export async function createAndSendContract(
   };
 }
 
-async function waitForDocumentReady(docId: string, maxWaitMs = 30000): Promise<void> {
+async function waitForDocumentReady(docId: string, maxWaitMs = 20000): Promise<void> {
   const start = Date.now();
   while (Date.now() - start < maxWaitMs) {
     const res = await fetch(`${PANDADOC_API_BASE}/documents/${docId}`, {

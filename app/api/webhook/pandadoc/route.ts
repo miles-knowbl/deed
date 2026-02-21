@@ -2,8 +2,6 @@ import { NextRequest } from "next/server";
 import { verifyWebhookSignature } from "@/lib/pandadoc";
 import { getResend, FROM_EMAIL } from "@/lib/resend";
 import { render } from "@react-email/components";
-import BuyerSignEmail from "@/emails/BuyerSignEmail";
-import SellerSignEmail from "@/emails/SellerSignEmail";
 import FullyExecutedEmail from "@/emails/FullyExecutedEmail";
 import AgentStatusEmail from "@/emails/AgentStatusEmail";
 
@@ -33,9 +31,10 @@ export async function POST(req: NextRequest) {
     const body = await req.text();
     const signature = req.headers.get("x-pandadoc-signature") ?? "";
 
-    // Verify webhook authenticity
-    if (process.env.PANDADOC_WEBHOOK_SECRET && !verifyWebhookSignature(body, signature)) {
-      console.warn("[webhook/pandadoc] Invalid signature");
+    // Fail closed: reject if signature is missing or invalid.
+    // verifyWebhookSignature returns false if PANDADOC_WEBHOOK_SECRET is not set.
+    if (!verifyWebhookSignature(body, signature)) {
+      console.warn("[webhook/pandadoc] Invalid or missing signature");
       return new Response("Unauthorized", { status: 401 });
     }
 
@@ -64,7 +63,7 @@ async function handleEvent(event: PandaDocWebhookEvent) {
   const pendingRecipients = recipients.filter((r) => !r.has_completed);
   const allComplete = pendingRecipients.length === 0;
 
-  // Determine who just signed (highest signing_order among completed)
+  // Determine who just signed (highest signing_order among completed — correct for sequential chains).
   const justSigned = completedRecipients.sort(
     (a, b) => (b.signing_order ?? 0) - (a.signing_order ?? 0)
   )[0];
@@ -75,31 +74,11 @@ async function handleEvent(event: PandaDocWebhookEvent) {
   const agentName = metadata.agentName ?? "Your Agent";
   const propertyAddress = data.name.replace("Purchase Agreement — ", "");
 
-  // Broker (signing_order 1) just signed → email buyer
+  // Broker (signing_order 1) just signed — PandaDoc auto-notifies buyer to sign.
+  // Ping agent only.
   if (justSigned.signing_order === 1) {
     const buyer = recipients.find((r) => r.signing_order === 2);
-    if (buyer) {
-      const pandaDocLink = `https://app.pandadoc.com/a/#/documents/${data.id}`;
 
-      await resend.emails.send({
-        from: FROM_EMAIL,
-        to: buyer.email,
-        subject: `Your Purchase Agreement is Ready to Sign — ${propertyAddress}`,
-        html: await render(
-          BuyerSignEmail({
-            buyerName: `${buyer.first_name} ${buyer.last_name}`.trim(),
-            agentName,
-            propertyAddress,
-            offerPrice: Number(metadata.offerPrice ?? 0),
-            loanType: metadata.loanType ?? "Conventional",
-            downPaymentPercent: Number(metadata.downPaymentPercent ?? 20),
-            signingLink: pandaDocLink,
-          })
-        ),
-      });
-    }
-
-    // Ping agent
     if (agentEmail) {
       await resend.emails.send({
         from: FROM_EMAIL,
@@ -121,33 +100,11 @@ async function handleEvent(event: PandaDocWebhookEvent) {
     }
   }
 
-  // Buyer (signing_order 2) just signed → email seller
+  // Buyer (signing_order 2) just signed — PandaDoc auto-notifies seller to sign.
+  // Ping agent only.
   if (justSigned.signing_order === 2) {
     const seller = recipients.find((r) => r.signing_order === 3);
-    if (seller) {
-      const pandaDocLink = `https://app.pandadoc.com/a/#/documents/${data.id}`;
-      const buyer = recipients.find((r) => r.signing_order === 2);
 
-      await resend.emails.send({
-        from: FROM_EMAIL,
-        to: seller.email,
-        subject: `Offer Received for ${propertyAddress} — Review & Sign`,
-        html: await render(
-          SellerSignEmail({
-            sellerName: `${seller.first_name} ${seller.last_name}`.trim(),
-            buyerName: buyer ? `${buyer.first_name} ${buyer.last_name}`.trim() : "Buyer",
-            agentName,
-            propertyAddress,
-            offerPrice: Number(metadata.offerPrice ?? 0),
-            loanType: metadata.loanType ?? "Conventional",
-            downPaymentPercent: Number(metadata.downPaymentPercent ?? 20),
-            signingLink: pandaDocLink,
-          })
-        ),
-      });
-    }
-
-    // Ping agent
     if (agentEmail) {
       await resend.emails.send({
         from: FROM_EMAIL,
@@ -169,15 +126,8 @@ async function handleEvent(event: PandaDocWebhookEvent) {
     }
   }
 
-  // All parties signed → fully executed emails to everyone
+  // All parties signed — send fully executed confirmation to everyone.
   if (allComplete) {
-    const today = new Date();
-    const closingDate = new Date(today);
-    closingDate.setDate(today.getDate() + 30);
-    const closingDateStr = closingDate.toLocaleDateString("en-US", {
-      month: "long", day: "numeric", year: "numeric",
-    });
-
     const broker = recipients.find((r) => r.signing_order === 1);
     const buyer = recipients.find((r) => r.signing_order === 2);
     const seller = recipients.find((r) => r.signing_order === 3);
@@ -195,7 +145,6 @@ async function handleEvent(event: PandaDocWebhookEvent) {
       brokerName: broker ? `${broker.first_name} ${broker.last_name}`.trim() : "Broker",
       propertyAddress,
       offerPrice: Number(metadata.offerPrice ?? 0),
-      closingDate: closingDateStr,
     };
 
     for (const party of allParties) {
@@ -213,7 +162,6 @@ async function handleEvent(event: PandaDocWebhookEvent) {
       });
     }
 
-    // Also notify agent
     if (agentEmail) {
       await resend.emails.send({
         from: FROM_EMAIL,
@@ -226,7 +174,7 @@ async function handleEvent(event: PandaDocWebhookEvent) {
             statusMessage: "All parties have signed — contract fully executed",
             signerName: seller ? `${seller.first_name} ${seller.last_name}`.trim() : "Seller",
             signerRole: "Seller",
-            nextStepMessage: `The Purchase Agreement for ${propertyAddress} is now fully executed. All parties have received a copy. Target closing: ${closingDateStr}.`,
+            nextStepMessage: `The Purchase Agreement for ${propertyAddress} is now fully executed. All parties have received a copy.`,
           })
         ),
       });

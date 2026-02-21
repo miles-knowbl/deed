@@ -2,7 +2,6 @@ import { NextRequest } from "next/server";
 import { createAndSendContract } from "@/lib/pandadoc";
 import { getResend, FROM_EMAIL } from "@/lib/resend";
 import { render } from "@react-email/components";
-import BrokerSignEmail from "@/emails/BrokerSignEmail";
 import AgentStatusEmail from "@/emails/AgentStatusEmail";
 import type { ContractFormData } from "@/types/contract";
 
@@ -13,29 +12,13 @@ export async function POST(req: NextRequest) {
     const { formData, contractText }: { formData: ContractFormData; contractText: string } =
       await req.json();
 
-    // Create PandaDoc document + start signing chain
-    const { id: pandaDocId, brokerLink } = await createAndSendContract(formData, contractText);
+    // Create PandaDoc document + start signing chain.
+    // PandaDoc sends its own signing request email to the broker automatically (silent: false).
+    const { id: pandaDocId } = await createAndSendContract(formData, contractText);
 
     const resend = getResend();
 
-    // Email 1: Broker sign request
-    await resend.emails.send({
-      from: FROM_EMAIL,
-      to: formData.brokerEmail,
-      subject: `Action Required: Please Sign Purchase Agreement — ${formData.propertyAddress}`,
-      html: await render(
-        BrokerSignEmail({
-          brokerName: formData.brokerName,
-          agentName: formData.agentName,
-          buyerName: formData.buyerName,
-          propertyAddress: formData.propertyAddress,
-          offerPrice: formData.offerPrice,
-          signingLink: brokerLink,
-        })
-      ),
-    });
-
-    // Email 2: Agent status ping — "sent to broker"
+    // Agent status ping only — PandaDoc handles the broker signing email directly.
     await resend.emails.send({
       from: FROM_EMAIL,
       to: formData.agentEmail,
