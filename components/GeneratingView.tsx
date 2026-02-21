@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { FileText } from "lucide-react";
 import { toast } from "sonner";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { useContractStore } from "@/store/contract";
 
 const SECTIONS = [
@@ -54,7 +56,6 @@ export default function GeneratingView() {
         const reader = res.body.getReader();
         const decoder = new TextDecoder();
         let totalChars = 0;
-        const estimatedTotal = 8000;
 
         while (!cancelled) {
           const { done: streamDone, value } = await reader.read();
@@ -67,15 +68,15 @@ export default function GeneratingView() {
           setDisplayedText(textRef.current);
           appendContractText(chunk);
 
-          // Update progress
-          const pct = Math.min(Math.round((totalChars / estimatedTotal) * 100), 97);
+          // Progress: count ## section headers written so far
+          const sectionsSeen = (textRef.current.match(/^## /gm) || []).length;
+          const charFraction = Math.min(totalChars / 1000, 1) * 0.08; // 0–8% while first section loads
+          const sectionFraction = (sectionsSeen / SECTIONS.length) * 0.97;
+          const pct = Math.round(Math.max(charFraction, sectionFraction) * 100);
           setProgress(pct);
 
-          // Update section label based on content
-          const sectionIdx = Math.min(
-            Math.floor((pct / 100) * SECTIONS.length),
-            SECTIONS.length - 1
-          );
+          // Section label: which section are we currently writing?
+          const sectionIdx = Math.min(Math.max(sectionsSeen, 0), SECTIONS.length - 1);
           setCurrentSection(sectionIdx);
 
           // Auto-scroll
@@ -191,9 +192,25 @@ export default function GeneratingView() {
 
           <div
             ref={scrollRef}
-            className="h-[calc(100dvh-240px)] md:h-[calc(100dvh-320px)] overflow-y-auto px-4 sm:px-8 py-6 font-mono text-[13px] leading-relaxed text-neutral-800 whitespace-pre-wrap"
+            className="h-[calc(100dvh-240px)] md:h-[calc(100dvh-320px)] overflow-y-auto px-4 sm:px-8 py-6"
           >
-            {displayedText}
+            <div className="prose-contract">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  h1: ({ children }) => <h1 className="text-base font-bold text-neutral-900 mt-6 mb-2 first:mt-0">{children}</h1>,
+                  h2: ({ children }) => <h2 className="text-[11px] font-semibold text-neutral-500 uppercase tracking-widest mt-6 mb-2 first:mt-0">{children}</h2>,
+                  p: ({ children }) => <p className="text-[13px] text-neutral-800 leading-relaxed mb-2">{children}</p>,
+                  ul: ({ children }) => <ul className="list-disc pl-5 mb-2 space-y-0.5">{children}</ul>,
+                  ol: ({ children }) => <ol className="list-decimal pl-5 mb-2 space-y-0.5">{children}</ol>,
+                  li: ({ children }) => <li className="text-[13px] text-neutral-800 leading-relaxed">{children}</li>,
+                  strong: ({ children }) => <strong className="font-semibold text-neutral-900">{children}</strong>,
+                  hr: () => <hr className="border-neutral-100 my-4" />,
+                }}
+              >
+                {displayedText}
+              </ReactMarkdown>
+            </div>
             {!done && (
               <motion.span
                 animate={{ opacity: [1, 0, 1] }}

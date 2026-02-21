@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { FileText, Send, ArrowLeft, CheckCircle2, Loader2, Users } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useContractStore } from "@/store/contract";
@@ -162,8 +164,22 @@ export default function ContractReview() {
             <span className="text-xs text-neutral-400">{contractText.length.toLocaleString()} characters</span>
           </div>
 
-          <div className="h-[calc(100dvh-360px)] md:h-[calc(100dvh-440px)] min-h-[280px] overflow-y-auto px-4 sm:px-8 py-6 font-mono text-[13px] leading-relaxed text-neutral-800 whitespace-pre-wrap">
-            {contractText}
+          <div className="h-[calc(100dvh-360px)] md:h-[calc(100dvh-440px)] min-h-[280px] overflow-y-auto px-4 sm:px-8 py-6">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              components={{
+                h1: ({ children }) => <h1 className="text-base font-bold text-neutral-900 mt-6 mb-2 first:mt-0">{children}</h1>,
+                h2: ({ children }) => <h2 className="text-[11px] font-semibold text-neutral-500 uppercase tracking-widest mt-6 mb-2 first:mt-0">{children}</h2>,
+                p: ({ children }) => <p className="text-[13px] text-neutral-800 leading-relaxed mb-2">{children}</p>,
+                ul: ({ children }) => <ul className="list-disc pl-5 mb-2 space-y-0.5">{children}</ul>,
+                ol: ({ children }) => <ol className="list-decimal pl-5 mb-2 space-y-0.5">{children}</ol>,
+                li: ({ children }) => <li className="text-[13px] text-neutral-800 leading-relaxed">{children}</li>,
+                strong: ({ children }) => <strong className="font-semibold text-neutral-900">{children}</strong>,
+                hr: () => <hr className="border-neutral-100 my-4" />,
+              }}
+            >
+              {contractText}
+            </ReactMarkdown>
           </div>
         </motion.div>
 
