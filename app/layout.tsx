@@ -28,7 +28,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        {children}
+        <div className="w-full max-w-full overflow-x-hidden">
+          {children}
+        </div>
         <Toaster
           position="bottom-right"
           toastOptions={{

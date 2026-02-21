@@ -120,7 +120,7 @@ export default function ContractReview() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f9f8f7] flex flex-col">
+    <div className="min-h-screen bg-[#f9f8f7] flex flex-col overflow-x-hidden">
       {/* Header */}
       <div className="border-b border-neutral-200 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -137,7 +137,7 @@ export default function ContractReview() {
         </div>
       </div>
 
-      <div className="max-w-3xl mx-auto px-4 py-8 flex-1 flex flex-col w-full gap-6">
+      <div className="max-w-3xl mx-auto px-4 py-8 flex-1 flex flex-col w-full min-w-0 gap-6">
         {/* Summary bar */}
         <motion.div
           variants={containerVariants}
@@ -216,10 +216,10 @@ export default function ContractReview() {
               { name: formData.sellerName, role: "Seller", step: 3 },
             ].map(({ name, role, step }, i) => (
               <div key={step} className="flex items-center gap-2">
-                <div className="flex items-center gap-2 bg-neutral-50 rounded-lg px-3 py-2 border border-neutral-100">
+                <div className="flex items-center gap-2 bg-neutral-50 rounded-lg px-3 py-2 border border-neutral-100 min-w-0 max-w-[140px]">
                   <span className="w-4 h-4 rounded-full bg-neutral-200 text-neutral-600 text-[9px] font-bold flex items-center justify-center flex-shrink-0">{step}</span>
-                  <div>
-                    <p className="text-xs font-medium text-neutral-800 leading-none">{name}</p>
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium text-neutral-800 leading-none truncate">{name}</p>
                     <p className="text-[10px] text-neutral-400 mt-0.5">{role}</p>
                   </div>
                 </div>

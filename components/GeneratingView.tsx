@@ -109,7 +109,7 @@ export default function GeneratingView() {
   }, [formData, appendContractText, setContractText, router]);
 
   return (
-    <div className="min-h-screen bg-[#f9f8f7] flex flex-col">
+    <div className="min-h-screen bg-[#f9f8f7] flex flex-col overflow-x-hidden">
       {/* Header */}
       <div className="border-b border-neutral-200 bg-white/80 backdrop-blur-sm">
         <div className="max-w-3xl mx-auto px-4 py-4">
@@ -117,7 +117,7 @@ export default function GeneratingView() {
         </div>
       </div>
 
-      <div className="max-w-3xl mx-auto px-4 py-8 flex-1 flex flex-col w-full">
+      <div className="max-w-3xl mx-auto px-4 py-8 flex-1 flex flex-col w-full min-w-0">
         {/* Status */}
         <motion.div
           initial={{ opacity: 0, y: -8 }}
@@ -177,10 +177,10 @@ export default function GeneratingView() {
           className="flex-1 bg-white rounded-2xl border border-neutral-200 shadow-sm overflow-hidden"
         >
           <div className="border-b border-neutral-100 px-6 py-4">
-            <div className="flex items-center gap-2">
-              <div className="w-2.5 h-2.5 rounded-full bg-neutral-200" />
-              <div className="w-2.5 h-2.5 rounded-full bg-neutral-200" />
-              <div className="w-2.5 h-2.5 rounded-full bg-neutral-200" />
+            <div className="flex items-center gap-2 min-w-0 overflow-hidden">
+              <div className="w-2.5 h-2.5 rounded-full bg-neutral-200 shrink-0" />
+              <div className="w-2.5 h-2.5 rounded-full bg-neutral-200 shrink-0" />
+              <div className="w-2.5 h-2.5 rounded-full bg-neutral-200 shrink-0" />
               <span className="ml-3 text-xs text-neutral-400 font-medium truncate min-w-0">
                 Residential Purchase Agreement — {formData?.propertyAddress ?? ""}
               </span>

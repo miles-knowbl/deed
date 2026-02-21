@@ -183,8 +183,8 @@ export default function ContractForm() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f9f8f7]">
-      <div className="max-w-2xl mx-auto px-4 py-12 sm:py-16">
+    <div className="min-h-screen bg-[#f9f8f7] overflow-x-hidden">
+      <div className="max-w-2xl mx-auto px-4 py-12 sm:py-16 w-full">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -12 }}
